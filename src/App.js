@@ -1,12 +1,21 @@
 import React, { Component } from 'react';
+import Particles from 'react-particles-js';
+import Clarifai from 'clarifai';
 import './App.css';
 import Navigation from './components/Navigation/Navigation';
+import Signin from './components/Signin/Signin';
+import FaceRecognition from './components/FaceRecognition/FaceRecognition';
 import Logo from './components/Logo/Logo';
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import Rank from './components/Rank/Rank';
-import Particles from 'react-particles-js';
+import Register from './components/Register/Register';
 
-const particlesOptions = {
+
+const app = new Clarifai.App({//for clarifai's api
+ apiKey: 'c83c746139c646e0859ee7421063fff1'
+});
+
+const particlesOptions = {//for particles
   particles: {
     number: {
       value: 130,
@@ -21,21 +30,97 @@ const particlesOptions = {
 
 
 class App extends Component {
+  constructor(){
+    super();
+    this.state={
+      input:'',
+      imageURL:'',
+      box:{},
+      route: 'signin',
+      isSignedIn: false,
+    }
+  }
+
+  calculateFaceLocation = (data) => {
+    console.log("respuesta");
+    console.log(data.outputs[0].data.regions[0].region_info.bounding_box);
+        // bottom_row: 0.75696754
+        // left_col: 0.20186703
+        // right_col: 0.7957487
+        // top_row: 0.31085533
+    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
+    const image = document.getElementById('inputimage');
+
+    const width = Number(image.width);
+    const height = Number(image.height);
+
+    return {
+      leftCol: clarifaiFace.left_col*width,
+      topRow: clarifaiFace.top_row*height,
+      rightCol: width - (clarifaiFace.right_col*width),
+      bottomRow: height - (clarifaiFace.right_col*height),
+    }
+
+  }//end calculateFaceLocation function
+
+  displayFaceBox = (box) => {
+    console.log(box);
+    this.setState({ box:box })
+
+  }
+
+  onInputChange = (event) => {
+    //console.log(event.target.value); //permite obtener el valor del input donde esta el método
+
+    this.setState({input: event.target.value})
+
+  }//end onInputChange
+
+  onButtonSubmit = () => {
+    this.setState( {imageURL:this.state.input} );
+
+    app.models.predict(
+          "a403429f2ddf4b49b307e318f00e528b",
+          this.state.input)
+        .then( (response)=>{ this.displayFaceBox(this.calculateFaceLocation(response)) })
+        .catch( (err)=>console.log(err) )
+  //end call API-end models.predict and manipulate the response
+
+  } // end onButtonSubmit
+
+  onRouteChange = (route) => {
+
+    if(route === 'signout'){
+      this.setState({ isSignedIn: false })
+    } else if(route === 'home'){
+      this.setState({ isSignedIn: true })
+    } 
+    this.setState({ route: route });
+
+  }// end onRouteChange
+
   render() {
     return (
       <div className="App">
         <Particles className = 'particles'
           params={particlesOptions}
         />
-        <Navigation />
-        <Logo />
-        <Rank />
-        <ImageLinkForm />
-        {/*
-        <FaceRecognition />*/}
+        <Navigation isSignedIn={this.state.isSignedIn} onRouteChange={this.onRouteChange}/>
+        { this.state.route === 'home'
+          ? <div>
+              <Logo />
+              <Rank />
+              <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit}/>
+              <FaceRecognition box={this.state.box} imageURL={this.state.imageURL} />
+          </div>
+          :( this.state.route === 'signin'
+              ? <Signin onRouteChange={this.onRouteChange}/>
+              : <Register onRouteChange={this.onRouteChange}/>
+          )
+        }
       </div>
     );
   }
-}
+}//end class
 
 export default App;
