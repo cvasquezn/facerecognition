@@ -38,8 +38,31 @@ class App extends Component {
       box:{},
       route: 'signin',
       isSignedIn: false,
+      user:{
+        id: '',
+        name: '',
+        email: '',
+        entries: 0,
+        joined: ''
+      }
     }
   }
+
+  // componentDidMount(){
+  //   fetch('http://localhost:3000/')
+  //     .then(response => response.json())
+  //     .then(data => console.log(data));
+  // }
+
+  loadUser = (data) => {
+    this.setState ( { user: {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    }})
+  }  
 
   calculateFaceLocation = (data) => {
     console.log("respuesta");
@@ -82,7 +105,27 @@ class App extends Component {
     app.models.predict(
           "a403429f2ddf4b49b307e318f00e528b",
           this.state.input)
-        .then( (response)=>{ this.displayFaceBox(this.calculateFaceLocation(response)) })
+        .then( (response)=>{ //if recieve response from clarifai, will update the entries of the user into database
+            if(response){
+              fetch('http://localhost:3000/image' , {
+                method:'put',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  id: this.state.user.id,
+                })//end body
+              })
+                .then( response => response.json() ) //this then its to handle the response from de server aferter to do request put. This its important para update entries in the browser in the rank component 
+                .then( count => {
+                    //this.setState( {user: { entries: count }}) //using this way after apply setState its going to empty all other attribute of de object user
+                    this.setState( Object.assign(this.state.user, {entries: count}));//using this way it's not going to empty other attribute
+                    }
+                  )//end last then 
+
+            }//end if 
+
+
+            this.displayFaceBox(this.calculateFaceLocation(response)) 
+          })
         .catch( (err)=>console.log(err) )
   //end call API-end models.predict and manipulate the response
 
@@ -109,13 +152,16 @@ class App extends Component {
         { this.state.route === 'home'
           ? <div>
               <Logo />
-              <Rank />
+              <Rank 
+                name = {this.state.user.name}
+                entries = {this.state.user.entries}
+              />
               <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit}/>
               <FaceRecognition box={this.state.box} imageURL={this.state.imageURL} />
           </div>
           :( this.state.route === 'signin'
-              ? <Signin onRouteChange={this.onRouteChange}/>
-              : <Register onRouteChange={this.onRouteChange}/>
+              ? <Signin loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
+              : <Register loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
           )
         }
       </div>
