@@ -12,14 +12,28 @@ class Signin extends React.Component {
   }
 
   onEmailChange = (event) =>{
-    this.setState({ signInEmail: event.target.value });
+     this.setState({ signInEmail: event.target.value });
   } //end onEmailChange
 
   onPasswordChange = (event) =>{
+
     this.setState({ signInPassword: event.target.value });
+
   }//end onPasswordChange
 
   onSubmitSignIn = () => {
+    console.log("submit");
+    console.log(this.state.signInEmail);
+    // const user = {
+    //   "id": 37,
+    //   "name": "max",
+    //   "email": "eve30@gmail.com",
+    //   "entries": 0,
+    //   "joined": "2019-01-29T20:35:46.000Z"
+    //   }
+    // this.props.loadUser(user)
+    // this.props.onRouteChange('home');
+
     fetch('http://localhost:3000/signin' , {
       method:'post',
       headers: { 'Content-Type': 'application/json' },
@@ -28,13 +42,30 @@ class Signin extends React.Component {
         password: this.state.signInPassword
       })//end body
     })//end fetch and then handle the response from server
-      .then(response => response.json())
+      
+      .then(response => response.json() )
+      .catch(error => console.error('Error:', error))
       .then(user => {
+        console.log("user obtenido");
+        console.log(user);
         if(user.id){
+          console.log("usuario valido-signin.js")
           this.props.loadUser(user)
           this.props.onRouteChange('home');
         }
       })
+
+
+      // .then(response => response.json() )
+      // .then(user => {
+      //   console.log("user obtenido");
+      //   console.log(user);
+      //   if(user.id){
+      //     console.log("usuario valido-signin.js")
+      //     this.props.loadUser(user)
+      //     this.props.onRouteChange('home');
+      //   }
+      // })
   }//end onSubmitSignIn
 
   render(){
@@ -44,7 +75,7 @@ class Signin extends React.Component {
     return (
     <article className="br3 ba dark-gray b--black-10 mv4 w-100 w-50-m w-25-l mw6 shadow-5 center">
       <main className="pa4 black-80">
-        <form className="measure center">
+        <form className="measure">
           <fieldset id="sign_up" className="ba b--transparent ph0 mh0">
             <legend className="f4 fw6 ph0 mh0">Sign In</legend>
             <div className="mt3">

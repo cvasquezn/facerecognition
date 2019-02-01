@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import Particles from 'react-particles-js';
-import Clarifai from 'clarifai';
 import './App.css';
 import Navigation from './components/Navigation/Navigation';
 import Signin from './components/Signin/Signin';
@@ -10,10 +9,6 @@ import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import Rank from './components/Rank/Rank';
 import Register from './components/Register/Register';
 
-
-const app = new Clarifai.App({//for clarifai's api
- apiKey: 'YOU_KEY'
-});
 
 const particlesOptions = {//for particles
   particles: {
@@ -27,25 +22,26 @@ const particlesOptions = {//for particles
   }
 }
 
+const initialState = {
+  input:'',
+  imageURL:'',
+  box:{},
+  route: 'signin',
+  isSignedIn: false,
+  user:{
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: ''
+  }
+}
 
 
 class App extends Component {
   constructor(){
     super();
-    this.state={
-      input:'',
-      imageURL:'',
-      box:{},
-      route: 'signin',
-      isSignedIn: false,
-      user:{
-        id: '',
-        name: '',
-        email: '',
-        entries: 0,
-        joined: ''
-      }
-    }
+    this.state= initialState;
   }
 
   // componentDidMount(){
@@ -55,6 +51,7 @@ class App extends Component {
   // }
 
   loadUser = (data) => {
+    console.log("cargando usuario");
     this.setState ( { user: {
       id: data.id,
       name: data.name,
@@ -102,11 +99,20 @@ class App extends Component {
   onButtonSubmit = () => {
     this.setState( {imageURL:this.state.input} );
 
-    app.models.predict(
-          "a403429f2ddf4b49b307e318f00e528b",
-          this.state.input)
+        fetch('http://localhost:3000/imageurl' , {
+                method:'post',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  input: this.state.input,
+                })//end body
+              })
+        .then( response => response.json() )
         .then( (response)=>{ //if recieve response from clarifai, will update the entries of the user into database
+            console.log('after grap response of clarifai');
+            console.log(response);
+
             if(response){
+              console.log("onButtonSubmit-respuesta desde clarifai")
               fetch('http://localhost:3000/image' , {
                 method:'put',
                 headers: { 'Content-Type': 'application/json' },
@@ -117,12 +123,14 @@ class App extends Component {
                 .then( response => response.json() ) //this then its to handle the response from de server aferter to do request put. This its important para update entries in the browser in the rank component 
                 .then( count => {
                     //this.setState( {user: { entries: count }}) //using this way after apply setState its going to empty all other attribute of de object user
-                    this.setState( Object.assign(this.state.user, {entries: count}));//using this way it's not going to empty other attribute
+                    console.log("numero de entries recibidas en onButtonSubmit");
+                    console.log(count.entries);
+                    this.setState( Object.assign(this.state.user, {entries: count.entries}));//using this way it's not going to empty other attribute it menas just update attribute assign
                     }
-                  )//end last then 
+                  )//end last then
+                .catch( (err)=>console.log(err) ); //always have ctach to handle error after a fetch
 
             }//end if 
-
 
             this.displayFaceBox(this.calculateFaceLocation(response)) 
           })
@@ -134,7 +142,7 @@ class App extends Component {
   onRouteChange = (route) => {
 
     if(route === 'signout'){
-      this.setState({ isSignedIn: false })
+      this.setState(initialState);
     } else if(route === 'home'){
       this.setState({ isSignedIn: true })
     } 
@@ -148,7 +156,10 @@ class App extends Component {
         <Particles className = 'particles'
           params={particlesOptions}
         />
-        <Navigation isSignedIn={this.state.isSignedIn} onRouteChange={this.onRouteChange}/>
+        <Navigation 
+          isSignedIn={this.state.isSignedIn} 
+          onRouteChange={this.onRouteChange}
+        />
         { this.state.route === 'home'
           ? <div>
               <Logo />
@@ -156,13 +167,19 @@ class App extends Component {
                 name = {this.state.user.name}
                 entries = {this.state.user.entries}
               />
-              <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit}/>
-              <FaceRecognition box={this.state.box} imageURL={this.state.imageURL} />
+              <ImageLinkForm 
+                onInputChange={this.onInputChange} 
+                onButtonSubmit={this.onButtonSubmit}
+              />
+              <FaceRecognition 
+                box={this.state.box} 
+                imageURL={this.state.imageURL} 
+              />
           </div>
-          :( this.state.route === 'signin'
+          : ( this.state.route === 'signin'
               ? <Signin loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
               : <Register loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
-          )
+            )
         }
       </div>
     );

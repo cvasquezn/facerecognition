@@ -3,7 +3,7 @@
 }
 
 .center {
-  display: center;
+  display: flex;
   justify-content: center;
 
 }
