@@ -8,6 +8,7 @@ import Logo from './components/Logo/Logo';
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import Rank from './components/Rank/Rank';
 import Register from './components/Register/Register';
+import * as Config from './components/Config/Config'
 
 
 const particlesOptions = {//for particles
@@ -97,9 +98,10 @@ class App extends Component {
   }//end onInputChange
 
   onButtonSubmit = () => {
-    this.setState( {imageURL:this.state.input} );
 
-        fetch('http://localhost:3000/imageurl' , {
+       this.setState( {imageURL:this.state.input} );
+
+        fetch(`${Config.URL_BACKEND}/imageurl` , {
                 method:'post',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -113,7 +115,7 @@ class App extends Component {
 
             if(response){
               console.log("onButtonSubmit-respuesta desde clarifai")
-              fetch('http://localhost:3000/image' , {
+              fetch(`${Config.URL_BACKEND}/image` , {
                 method:'put',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

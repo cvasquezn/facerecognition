@@ -1,4 +1,5 @@
 import React from "react";
+import * as Config from '../../components/Config/Config'
 
 class Signin extends React.Component {
 // const Signin = ( { onRouteChange } ) => { // chang from const to components within state
@@ -22,8 +23,10 @@ class Signin extends React.Component {
   }//end onPasswordChange
 
   onSubmitSignIn = () => {
-    console.log("submit");
-    console.log(this.state.signInEmail);
+    //console.log("submit");
+    //console.log(this.state.signInEmail);
+    // console.log(Config.URL_BACKEND);
+    console.log(`${Config.URL_BACKEND}/signin`);
     // const user = {
     //   "id": 37,
     //   "name": "max",
@@ -34,7 +37,7 @@ class Signin extends React.Component {
     // this.props.loadUser(user)
     // this.props.onRouteChange('home');
 
-    fetch('http://localhost:3000/signin' , {
+    fetch(`${Config.URL_BACKEND}/signin` , {
       method:'post',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

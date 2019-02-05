@@ -1,4 +1,5 @@
 import React from "react";
+import * as Config from '../../components/Config/Config'
 
 class Register extends React.Component {
   constructor(props){
@@ -23,7 +24,7 @@ class Register extends React.Component {
   }//end onPasswordChange
 
   onSubmitSignIn = () => {
-    fetch('http://localhost:3000/register' , {
+    fetch(`${Config.URL_BACKEND}/register` , {
       method:'post',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
