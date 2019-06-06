@@ -8,4 +8,7 @@ Final project for Udemy course
 You can grab Clarifai API key here: https://www.clarifai.com/
 
 
+NOTE: this react project was deploy on github using gh-page. This part of the project is the front end of de app. The backend was deploy on Heroku.
+
+
 
